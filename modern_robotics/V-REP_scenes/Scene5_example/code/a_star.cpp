@@ -6,19 +6,25 @@
 #include <limits> // for infinity
 #include <vector>
 #include <algorithm>
+
 using namespace std; 
 
-int NUM_OF_NODE = 12;
-int GOAL = 12 ;
-int START = 1 ;
+#define NUM_OF_NODE 12
+#define GOAL 12
+#define START 1
+
 class node { 
 public: 
-    double heuristic_cost; // heuristic cost of this node to goal node
-    // Can be update
+    //Updatable variable
     int parenet_node; // parent of this node (ID)
-    double past_cost; // past cost of this node
+    double past_cost;
+    
+    //Intrinstic information 
     vector<int>    edge_list; // [neighbor_id_1 ,neighbor_id_2, neighbor_id_3, ....]
     vector<double> edge_cost; // [edge_cost_1   ,edge_cost_2,   edge_cost_3, ...]
+    double heuristic_cost;
+    
+    // class constructor
     node(double heu_cost): heuristic_cost(heu_cost), past_cost(numeric_limits<double>::infinity()), parenet_node(-1){}
 };
 
@@ -40,10 +46,9 @@ If open_list is empty, return -1
             id = open_list.at(i);
         }
     }
-    if (id == -1) return id ;
+    if (id == -1) return id ;//open_list is empty
 
     // pop out id from open_list and return id 
-    // Removes all elements with the value 5.
     open_list.erase(remove(open_list.begin(), open_list.end(), id), open_list.end());
     return id;
 }
@@ -55,7 +60,7 @@ int main()
     *********************************************************/
     //Init node list, ID is indice of list
     vector<node> node_list; // start from 1 not 0.
-    node_list.assign(NUM_OF_NODE+1,0);// init element by zero
+    node_list.assign(NUM_OF_NODE+1,0);// init node_list
     //readfile
     fstream file;
     file.open("../result/nodes.csv");
@@ -95,9 +100,9 @@ int main()
 	}
     file.close();
     
-    /*************************
-    ******** Planning ********
-    *************************/
+    /****************************
+    ******** A* Planning ********
+    ****************************/
     vector<int> open_list; // node-ID
     vector<int> close_list; // node-ID
 
@@ -109,7 +114,6 @@ int main()
     while (not open_list.empty())
     {
         int current = pop_min(open_list,node_list);
-        cout << "current : " << current << endl;
         close_list.push_back(current);
         // Check if already reached goal
         if (current == GOAL)break;
@@ -138,9 +142,12 @@ int main()
         }
     }
     cout << "reached goal" << endl;
+    /***********************************
+    ********  traverse A* path  ********
+    ***********************************/
     // recursive traverse A* path
     int x = GOAL;
-    vector<int> inv_path; // path that start from GOAL, end at START
+    vector<int> inv_path; // inverse path,start from GOAL, end at START
     inv_path.push_back(x);
     while (x != START)
     {
@@ -150,16 +157,16 @@ int main()
 
     for (vector<int>::iterator it = inv_path.begin() ; it != inv_path.end(); it++)cout << *it << endl;
         
-    
-    //writefile in inverse order
+    /*************************************
+    ********  Output to path.csv  ********
+    *************************************/
     ofstream output_file ("../result/path.csv");
     while (!inv_path.empty())
     {
-        output_file << inv_path.back();
+        output_file << inv_path.back();//reverse-order
         inv_path.pop_back();
         if (!inv_path.empty()) output_file << ",";
     }
     output_file.close();
-    
     return 0;
 }
